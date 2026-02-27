@@ -38,17 +38,49 @@ router.post("/identify", async (req: Request, res: Response) => {
             })
         }
 
-        const contactIds = existingContacts.map(c =>
-            c.linkPrecedence === "primary" ? c.id : c.linkedId
-        );
+        const primaryIds = new Set<number>();
 
-        const validIds = contactIds.filter(id => id != null) as number[];
+        existingContacts.forEach(contact => {
+            if (contact.linkPrecedence === "primary") {
+                primaryIds.add(contact.id);
+            } else if (contact.linkedId) {
+                primaryIds.add(contact.linkedId);
+            }
+        });
 
-        if (validIds.length === 0) {
-            return res.status(500).json({ message: "Primary resolution failed" });
+        const involvedPrimaries = await prisma.contact.findMany({
+            where: {
+                id: { in: Array.from(primaryIds) }
+            }
+        });
+
+        const oldestPrimary = involvedPrimaries.sort(
+            (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+        )[0];
+
+        const primaryId = oldestPrimary.id;
+
+        const otherPrimaries = involvedPrimaries.filter(p => p.id !== primaryId);
+
+        for (const primary of otherPrimaries) {
+
+            await prisma.contact.updateMany({
+                where: {
+                    linkedId: primary.id
+                },
+                data: {
+                    linkedId: primaryId
+                }
+            });
+
+            await prisma.contact.update({
+                where: { id: primary.id },
+                data: {
+                    linkedId: primaryId,
+                    linkPrecedence: "secondary"
+                }
+            });
         }
-
-        const primaryId = Math.min(...validIds);
 
         const allLinkedContacts = await prisma.contact.findMany({
             where: {
