@@ -3,7 +3,7 @@ import { reconcileContact } from "../services/services";
 
 const router = Router();
 
-router.post("/identify", async (req: Request, res: Response) => {
+router.post("/lets", async (req: Request, res: Response) => {
     try {
         const { email, phoneNumber } = req.body;
         const result = await reconcileContact(email, phoneNumber);
