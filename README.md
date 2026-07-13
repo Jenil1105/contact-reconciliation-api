@@ -10,9 +10,9 @@ This service links multiple contacts belonging to the same user based on shared 
 
 **Base URL:** https://contact-reconciliation-api.onrender.com
 
-**Endpoint:** POST /identify
+**Endpoint:** POST /lets
 
-**Full Request URL:** POST https://contact-reconciliation-api.onrender.com/identify
+**Full Request URL:** POST https://contact-reconciliation-api.onrender.com/lets
 
 ---
 
